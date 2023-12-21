@@ -162,11 +162,11 @@ Expr List ::parse(Assoc &env)
     }
     else if (t->e_type == E_IF)
     {
-        if (stxs.size() != 3)
+        if (stxs.size() != 4)
             throw RuntimeError("Bad parameters number");
-        Expr cond = stxs[0]->parse(env);
-        Expr conseq = stxs[1]->parse(env);
-        Expr alter = stxs[2]->parse(env);
+        Expr cond = stxs[1]->parse(env);
+        Expr conseq = stxs[2]->parse(env);
+        Expr alter = stxs[3]->parse(env);
         ExprBase *temp = new If(cond, conseq, alter);
         return Expr(temp);
     }

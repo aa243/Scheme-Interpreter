@@ -29,7 +29,17 @@ Value Fixnum::eval(Assoc &e)
     return temp;
 } // evaluation of a fixnum
 
-Value If::eval(Assoc &e) {} // if expression
+Value If::eval(Assoc &e)
+{
+    Value temp1 = cond->eval(e);
+    if (temp1->v_type == V_BOOL)
+    {
+        Boolean *temp = dynamic_cast<Boolean *>(temp1.get());
+        if (temp->b == false)
+            return alter->eval(e);
+    }
+    return conseq->eval(e);
+} // if expression
 
 Value True::eval(Assoc &e)
 {
@@ -45,7 +55,16 @@ Value False::eval(Assoc &e)
     return temp;
 } // evaluation of #f
 
-Value Begin::eval(Assoc &e) {} // begin expression
+Value Begin::eval(Assoc &e)
+{
+    if (es.size() == 0)
+        return NullV();
+    for (int i = 0; i < es.size() - 1; ++i)
+    {
+        es[i]->eval(e);
+    }
+    return es[es.size() - 1]->eval(e);
+} // begin expression
 
 Value Quote::eval(Assoc &e)
 {
@@ -80,7 +99,10 @@ Value Quote::eval(Assoc &e)
     }
 } // quote expression
 
-Value MakeVoid::eval(Assoc &e) {} // (void)
+Value MakeVoid::eval(Assoc &e)
+{
+    return VoidV();
+} // (void)
 
 Value Exit::eval(Assoc &e)
 {
@@ -101,23 +123,100 @@ Value Unary::eval(Assoc &e)
     return evalRator(v1);
 } // evaluation of single-operator primitive
 
-Value Mult::evalRator(const Value &rand1, const Value &rand2) {} // *
+Value Mult::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return IntegerV(temp1->n * temp2->n);
+} // *
 
-Value Plus::evalRator(const Value &rand1, const Value &rand2) {} // +
+Value Plus::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return IntegerV(temp1->n + temp2->n);
+} // +
 
-Value Minus::evalRator(const Value &rand1, const Value &rand2) {} // -
+Value Minus::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return IntegerV(temp1->n - temp2->n);
+} // -
 
-Value Less::evalRator(const Value &rand1, const Value &rand2) {} // <
+Value Less::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return BooleanV(temp1->n < temp2->n);
+} // <
 
-Value LessEq::evalRator(const Value &rand1, const Value &rand2) {} // <=
+Value LessEq::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return BooleanV(temp1->n <= temp2->n);
+} // <=
 
-Value Equal::evalRator(const Value &rand1, const Value &rand2) {} // =
+Value Equal::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return BooleanV(temp1->n == temp2->n);
+} // =
 
-Value GreaterEq::evalRator(const Value &rand1, const Value &rand2) {} // >=
+Value GreaterEq::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return BooleanV(temp1->n >= temp2->n);
+} // >=
 
-Value Greater::evalRator(const Value &rand1, const Value &rand2) {} // >
+Value Greater::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type != V_INT || rand2->v_type != V_INT)
+        throw RuntimeError("Value type error in >");
+    Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+    Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+    return BooleanV(temp1->n > temp2->n);
+} // >
 
-Value IsEq::evalRator(const Value &rand1, const Value &rand2) {} // eq?
+Value IsEq::evalRator(const Value &rand1, const Value &rand2)
+{
+    if (rand1->v_type == V_INT && rand2->v_type == V_INT)
+    {
+        Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
+        Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
+        return BooleanV(temp1->n == temp2->n);
+    }
+    if (rand1->v_type == V_BOOL && rand2->v_type == V_BOOL)
+    {
+        Boolean *temp1 = dynamic_cast<Boolean *>(rand1.get());
+        Boolean *temp2 = dynamic_cast<Boolean *>(rand2.get());
+        return BooleanV(temp1->b == temp2->b);
+    }
+    if (rand1->v_type == V_SYM && rand2->v_type == V_SYM)
+    {
+        Symbol *temp1 = dynamic_cast<Symbol *>(rand1.get());
+        Symbol *temp2 = dynamic_cast<Symbol *>(rand2.get());
+        return BooleanV(temp1->s == temp2->s);
+    }
+    return BooleanV(rand1.get() == rand2.get());
+} // eq?
 
 Value Cons::evalRator(const Value &rand1, const Value &rand2)
 {

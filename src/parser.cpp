@@ -122,7 +122,7 @@ Expr List ::parse(Assoc &env)
             throw RuntimeError("Inadequate parameter numbers");
         auto p = stxs.begin();
         ++p;
-        if (typeid(p->get()) != typeid(List))
+        if (typeid(*p->get()) != typeid(List))
             throw RuntimeError("Inadequate parameter format");
 
         // 获取赋值列表
@@ -135,14 +135,14 @@ Expr List ::parse(Assoc &env)
         std::vector<std::pair<std::string, Expr>> bind;
         for (; q != Bindvct.end(); ++q)
         {
-            if (typeid(q->get()) != typeid(List))
+            if (typeid(*q->get()) != typeid(List))
                 throw RuntimeError("Inadequate parameter format");
             List *BindArray = dynamic_cast<List *>(q->get());
 
             // 检查内部每一个赋值列表类型以及元素个数
             if (BindArray->stxs.size() != 2)
                 throw RuntimeError("Inadequate parameter format");
-            if (typeid(BindArray->stxs.begin()->get()) != typeid(Identifier))
+            if (typeid(*BindArray->stxs.begin()->get()) != typeid(Identifier))
                 throw RuntimeError("Bad variable name");
 
             // 将新增加的变量加入环境变量并且放入 let 的 expr 中
@@ -201,7 +201,7 @@ Expr List ::parse(Assoc &env)
             throw RuntimeError("Bad parameter number");
 
         // 检查参数类型
-        if (typeid(stxs[1].get()) != typeid(List))
+        if (typeid(*stxs[1].get()) != typeid(List))
             throw RuntimeError("Bad parameter format");
         SyntaxBase *lamdapt = stxs[1].get();
         List *LamdaList = dynamic_cast<List *>(lamdapt);
@@ -210,7 +210,7 @@ Expr List ::parse(Assoc &env)
         for (int i = 0; i < LamdaList->stxs.size(); ++i)
         {
             // 检查参数类型
-            if (typeid(LamdaList->stxs[i].get()) != typeid(Identifier))
+            if (typeid(*LamdaList->stxs[i].get()) != typeid(Identifier))
                 throw RuntimeError("Bad parameter format");
             SyntaxBase *varpt = LamdaList->stxs[i].get();
             Identifier *varname = dynamic_cast<Identifier *>(varpt);
@@ -236,7 +236,7 @@ Expr List ::parse(Assoc &env)
             throw RuntimeError("Inadequate parameter numbers");
         auto p = stxs.begin();
         ++p;
-        if (typeid(p->get()) != typeid(List))
+        if (typeid(*p->get()) != typeid(List))
             throw RuntimeError("Inadequate parameter format");
 
         // 获取赋值列表
@@ -249,14 +249,14 @@ Expr List ::parse(Assoc &env)
         std::vector<std::pair<std::string, Expr>> bind;
         for (; q != Bindvct.end(); ++q)
         {
-            if (typeid(q->get()) != typeid(List))
+            if (typeid(*q->get()) != typeid(List))
                 throw RuntimeError("Inadequate parameter format");
             List *BindArray = dynamic_cast<List *>(q->get());
 
             // 检查内部每一个赋值列表类型以及元素个数
             if (BindArray->stxs.size() != 2)
                 throw RuntimeError("Inadequate parameter format");
-            if (typeid(BindArray->stxs.begin()->get()) != typeid(Identifier))
+            if (typeid(*BindArray->stxs.begin()->get()) != typeid(Identifier))
                 throw RuntimeError("Bad variable name");
 
             // 将新增加的变量加入环境变量
@@ -272,14 +272,14 @@ Expr List ::parse(Assoc &env)
 
         for (; q != Bindvct.end(); ++q)
         {
-            if (typeid(q->get()) != typeid(List))
+            if (typeid(*q->get()) != typeid(List))
                 throw RuntimeError("Inadequate parameter format");
             List *BindArray = dynamic_cast<List *>(q->get());
 
             // 检查内部每一个赋值列表类型以及元素个数
             if (BindArray->stxs.size() != 2)
                 throw RuntimeError("Inadequate parameter format");
-            if (typeid(BindArray->stxs.begin()->get()) != typeid(Identifier))
+            if (typeid(*BindArray->stxs.begin()->get()) != typeid(Identifier))
                 throw RuntimeError("Bad variable name");
 
             // 将变量放入 letrec 的 expr 中

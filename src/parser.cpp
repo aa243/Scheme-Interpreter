@@ -48,17 +48,7 @@ Expr Identifier ::parse(Assoc &env)
     {
         ExprBase *pt = new Var(s);
         Expr temp(pt);
-        if (find(s, env)->v_type == V_PROC)
-        {
-            std ::vector<Expr> t;
-            ExprBase *pt2 = new Apply(temp, t);
-            Expr temp2(pt2);
-            return pt2;
-        }
-        else
-        {
-            return temp;
-        }
+        return temp;
     }
     if (primitives.find(s) != primitives.end())
     {
@@ -72,7 +62,7 @@ Expr Identifier ::parse(Assoc &env)
         Expr temp(pt);
         return temp;
     }
-    throw RuntimeError("Unbounded variable!");
+    throw RuntimeError("Bad Identifier Syntax");
 }
 
 Expr List ::parse(Assoc &env)
@@ -86,8 +76,15 @@ Expr List ::parse(Assoc &env)
     Expr t = stxs.begin()->parse(env);
     if (t->e_type == E_VAR)
     {
-        throw RuntimeError("Bad parameters format");
-        return t;
+        std::vector<Expr> t1;
+        auto p = stxs.begin();
+        ++p;
+        for (; p != stxs.end(); ++p)
+        {
+            t1.push_back(p->parse(env));
+        }
+        ExprBase *temp = new Apply(t, t1);
+        return Expr(temp);
     }
     else if (t->e_type == E_VOID)
     {
@@ -95,19 +92,6 @@ Expr List ::parse(Assoc &env)
             throw RuntimeError("Bad parameters number");
         ExprBase *pt = new MakeVoid();
         Expr temp(pt);
-        return temp;
-    }
-    else if (t->e_type == E_APPLY)
-    {
-        Apply *t1 = dynamic_cast<Apply *>(t.get());
-        auto p = stxs.begin();
-        ++p;
-        for (; p != stxs.end(); ++p)
-        {
-            t1->rand.push_back(p->parse(env));
-        }
-        // 使用了子类的指针初始化本来要用基类指针初始化的对象
-        Expr temp(t1);
         return temp;
     }
     else if (t->e_type == E_LET)
@@ -149,11 +133,15 @@ Expr List ::parse(Assoc &env)
             auto pt = BindArray->stxs.begin();
             Identifier *ipt = dynamic_cast<Identifier *>(pt->get());
             ++pt;
-            bind.push_back({ipt->s, pt->parse(env2)});
-            Value v = find(ipt->s, env);
+            Expr val = pt->parse(env2);
+
+            // 加入环境变量中
+            Value v = TerminateV();
+            env = extend(ipt->s, v, env);
+
+            bind.push_back({ipt->s, val});
             if (m.find(ipt->s) != m.end())
                 throw RuntimeError("non-unique bindings");
-            env = extend(ipt->s, Value(nullptr), env);
             m[ipt->s] = 1;
         }
         ++p;
@@ -264,7 +252,7 @@ Expr List ::parse(Assoc &env)
             Identifier *ipt = dynamic_cast<Identifier *>(pt->get());
             if (m.find(ipt->s) != m.end())
                 throw RuntimeError("non-unique bindings");
-            env = extend(ipt->s, Value(nullptr), env);
+            env = extend(ipt->s, TerminateV(), env);
             m[ipt->s] = 1;
         }
 

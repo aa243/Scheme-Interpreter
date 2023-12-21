@@ -125,19 +125,46 @@ Value Cons::evalRator(const Value &rand1, const Value &rand2)
     return Value(temp);
 } // cons
 
-Value IsBoolean::evalRator(const Value &rand) {} // boolean?
+Value IsBoolean::evalRator(const Value &rand)
+{
+    return BooleanV(rand->v_type == V_BOOL);
+} // boolean?
 
-Value IsFixnum::evalRator(const Value &rand) {} // fixnum?
+Value IsFixnum::evalRator(const Value &rand)
+{
+    return BooleanV(rand->v_type == V_INT);
+} // fixnum?
 
-Value IsSymbol::evalRator(const Value &rand) {} // symbol?
+Value IsSymbol::evalRator(const Value &rand)
+{
+    return BooleanV(rand->v_type == V_SYM);
+} // symbol?
 
-Value IsNull::evalRator(const Value &rand) {} // null?
+Value IsNull::evalRator(const Value &rand)
+{
+    return BooleanV(rand->v_type == V_NULL);
+} // null?
 
-Value IsPair::evalRator(const Value &rand) {} // pair?
+Value IsPair::evalRator(const Value &rand)
+{
+    return BooleanV(rand->v_type == V_PAIR);
+} // pair?
 
-Value IsProcedure::evalRator(const Value &rand) {} // procedure?
+Value IsProcedure::evalRator(const Value &rand)
+{
+    return BooleanV(rand->v_type == V_PROC);
+} // procedure?
 
-Value Not::evalRator(const Value &rand) {} // not
+Value Not::evalRator(const Value &rand)
+{
+    if (rand->v_type == V_BOOL)
+    {
+        Boolean *temp = dynamic_cast<Boolean *>(rand.get());
+        if (temp->b == false)
+            return BooleanV(1);
+    }
+    return BooleanV(0);
+} // not
 
 Value Car::evalRator(const Value &rand)
 {

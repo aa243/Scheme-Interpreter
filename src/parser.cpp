@@ -114,6 +114,8 @@ Expr List ::parse(Assoc &env)
     {
         // 备份环境变量
         Assoc env2 = env;
+        // 存储使用过的变量名
+        std::map<std::string, bool> m;
 
         // 检查参数是否符合要求
         if (stxs.size() != 3)
@@ -149,8 +151,10 @@ Expr List ::parse(Assoc &env)
             ++pt;
             bind.push_back({ipt->s, pt->parse(env2)});
             Value v = find(ipt->s, env);
-            if (v.get() == nullptr)
-                extend(ipt->s, Value(nullptr), env);
+            if (m.find(ipt->s) != m.end())
+                throw RuntimeError("non-unique bindings");
+            env = extend(ipt->s, Value(nullptr), env);
+            m[ipt->s] = 1;
         }
         ++p;
         Expr body = p->parse(env);
@@ -192,6 +196,7 @@ Expr List ::parse(Assoc &env)
     {
         // 备份环境变量
         Assoc env2 = env;
+        std::map<std::string, bool> m;
         if (stxs.size() != 3)
             throw RuntimeError("Bad parameter number");
 
@@ -210,13 +215,10 @@ Expr List ::parse(Assoc &env)
             SyntaxBase *varpt = LamdaList->stxs[i].get();
             Identifier *varname = dynamic_cast<Identifier *>(varpt);
             x.push_back(varname->s);
-            if (find(varname->s, env).get() == nullptr)
-            {
-                // 这里最好要判一下参数名字不能相同
-                extend(varname->s, Value(nullptr), env);
-            }
-            else if (find(varname->s, env2).get() == nullptr)
-                throw RuntimeError("Same variable names in lamda");
+            if (m.find(varname->s) != m.begin())
+                throw RuntimeError("non-unique bindings");
+            env = extend(varname->s, Value(nullptr), env);
+            m[varname->s] = 1;
         }
         Expr body = stxs[2]->parse(env);
         ExprBase *temp = new Lambda(x, body);
@@ -227,6 +229,7 @@ Expr List ::parse(Assoc &env)
     {
         // 备份环境变量
         Assoc env2 = env;
+        std::map<std::string, bool> m;
 
         // 检查参数是否符合要求
         if (stxs.size() != 3)
@@ -259,13 +262,10 @@ Expr List ::parse(Assoc &env)
             // 将新增加的变量加入环境变量
             auto pt = BindArray->stxs.begin();
             Identifier *ipt = dynamic_cast<Identifier *>(pt->get());
-            Value v = find(ipt->s, env);
-            if (v.get() == nullptr)
-                extend(ipt->s, Value(nullptr), env);
-            else if (find(ipt->s, env2).get() == nullptr)
-                throw RuntimeError("Same variable name");
-            else
-                modify(ipt->s, Value(nullptr), env);
+            if (m.find(ipt->s) != m.end())
+                throw RuntimeError("non-unique bindings");
+            env = extend(ipt->s, Value(nullptr), env);
+            m[ipt->s] = 1;
         }
 
         q = Bindvct.begin();

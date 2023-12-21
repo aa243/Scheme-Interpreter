@@ -14,13 +14,24 @@ Value ExprBase::eval(Assoc &env) { throw RuntimeError("RE"); }
 
 Value Let::eval(Assoc &env) {} // let expression
 
-Value Lambda::eval(Assoc &env) {} // lambda expression
+Value Lambda::eval(Assoc &env)
+{
+
+} // lambda expression
 
 Value Apply::eval(Assoc &e) {} // for function calling
 
 Value Letrec::eval(Assoc &env) {} // letrec expression
 
-Value Var::eval(Assoc &e) {} // evaluation of variable
+Value Var::eval(Assoc &e)
+{
+    Value v = find(x, e);
+    if (v.get() == nullptr)
+        throw RuntimeError("Variant doesn't has value");
+    if (v->v_type == V_RVOID)
+        throw RuntimeError("Variant has been declared but not been binded");
+    return v;
+} // evaluation of variable
 
 Value Fixnum::eval(Assoc &e)
 {

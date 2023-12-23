@@ -10,26 +10,77 @@
 extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
-Value ExprBase::eval(Assoc &env) { throw RuntimeError("RE"); }
+Value ExprBase::eval(Assoc &env) { throw RuntimeError("Bad keyword format"); }
 
-Value Let::eval(Assoc &env) {} // let expression
+Value Let::eval(Assoc &env)
+{
+    Assoc env2 = env;
+    for (auto p : bind)
+    {
+        env = extend(p.first, p.second->eval(env2), env);
+    }
+    Value v = body->eval(env);
+    env = env2;
+    return v;
+} // let expression
 
 Value Lambda::eval(Assoc &env)
 {
-
+    return ClosureV(x, e, env);
 } // lambda expression
 
-Value Apply::eval(Assoc &e) {} // for function calling
+Value Apply::eval(Assoc &e)
+{
+    Value clos = rator->eval(e);
+    if (typeid(*clos.get()) != typeid(Closure))
+        throw RuntimeError("Value type is not a closure in Apply");
+    Closure *proc = dynamic_cast<Closure *>(clos.get());
+    Assoc env2 = proc->env;
+    if (proc->parameters.size() != rand.size())
+        throw RuntimeError("The number of the parameter list and the actual operands doesn't match in Apply");
+    for (int i = 0; i < rand.size(); ++i)
+    {
+        env2 = extend(proc->parameters[i], rand[i]->eval(e), env2);
+    }
+    return proc->e->eval(env2);
+} // for function calling
 
-Value Letrec::eval(Assoc &env) {} // letrec expression
+Value Letrec::eval(Assoc &env)
+{
+    Assoc env2 = env;
+    for (auto p : bind)
+    {
+        env = extend(p.first, real_voidV(), env);
+    }
+    Assoc env3 = env;
+    std::vector<Value> vct; // 用于存储指向 Closure 的 Value
+    for (auto p : bind)
+    {
+        Value v = p.second->eval(env3);
+        if (typeid(*v.get()) == typeid(Closure))
+        {
+            vct.push_back(v);
+        }
+        env = extend(p.first, v, env);
+    }
+    // 修改 Closure 中的作用域
+    for (auto p : vct)
+    {
+        Closure *t = dynamic_cast<Closure *>(p.get());
+        t->env = env;
+    }
+    Value v = body->eval(env);
+    env = env2;
+    return v;
+} // letrec expression
 
 Value Var::eval(Assoc &e)
 {
     Value v = find(x, e);
     if (v.get() == nullptr)
-        throw RuntimeError("Variant doesn't has value");
+        throw RuntimeError("Variant hasn't been declared for " + x);
     if (v->v_type == V_RVOID)
-        throw RuntimeError("Variant has been declared but not been binded");
+        throw RuntimeError("Variant has been declared but not been binded for " + x);
     return v;
 } // evaluation of variable
 
@@ -137,7 +188,7 @@ Value Unary::eval(Assoc &e)
 Value Mult::evalRator(const Value &rand1, const Value &rand2)
 {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("Value type error in >");
+        throw RuntimeError("Value type error in *");
     Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
     Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
     return IntegerV(temp1->n * temp2->n);
@@ -146,7 +197,7 @@ Value Mult::evalRator(const Value &rand1, const Value &rand2)
 Value Plus::evalRator(const Value &rand1, const Value &rand2)
 {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("Value type error in >");
+        throw RuntimeError("Value type error in +");
     Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
     Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
     return IntegerV(temp1->n + temp2->n);
@@ -155,7 +206,7 @@ Value Plus::evalRator(const Value &rand1, const Value &rand2)
 Value Minus::evalRator(const Value &rand1, const Value &rand2)
 {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("Value type error in >");
+        throw RuntimeError("Value type error in -");
     Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
     Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
     return IntegerV(temp1->n - temp2->n);
@@ -164,7 +215,7 @@ Value Minus::evalRator(const Value &rand1, const Value &rand2)
 Value Less::evalRator(const Value &rand1, const Value &rand2)
 {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("Value type error in >");
+        throw RuntimeError("Value type error in <");
     Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
     Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
     return BooleanV(temp1->n < temp2->n);
@@ -173,7 +224,7 @@ Value Less::evalRator(const Value &rand1, const Value &rand2)
 Value LessEq::evalRator(const Value &rand1, const Value &rand2)
 {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("Value type error in >");
+        throw RuntimeError("Value type error in <=");
     Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
     Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
     return BooleanV(temp1->n <= temp2->n);
@@ -182,7 +233,7 @@ Value LessEq::evalRator(const Value &rand1, const Value &rand2)
 Value Equal::evalRator(const Value &rand1, const Value &rand2)
 {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("Value type error in >");
+        throw RuntimeError("Value type error in =");
     Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
     Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
     return BooleanV(temp1->n == temp2->n);
@@ -191,7 +242,7 @@ Value Equal::evalRator(const Value &rand1, const Value &rand2)
 Value GreaterEq::evalRator(const Value &rand1, const Value &rand2)
 {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("Value type error in >");
+        throw RuntimeError("Value type error in >=");
     Integer *temp1 = dynamic_cast<Integer *>(rand1.get());
     Integer *temp2 = dynamic_cast<Integer *>(rand2.get());
     return BooleanV(temp1->n >= temp2->n);

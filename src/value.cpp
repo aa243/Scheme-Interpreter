@@ -1,4 +1,5 @@
 #include "value.hpp"
+#include "RE.hpp"
 
 AssocList::AssocList(const std::string &x, const Value &v, Assoc &next)
     : x(x), v(v), next(next) {}
@@ -49,6 +50,10 @@ void ValueBase::showCdr(std::ostream &os)
   os << ')';
 }
 
+void real_void::show(std::ostream &os)
+{
+  throw RuntimeError("don't show it!!!");
+}
 void Void::show(std::ostream &os)
 {
   os << "#<void>";

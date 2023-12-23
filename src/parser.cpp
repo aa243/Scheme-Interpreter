@@ -74,7 +74,7 @@ Expr List ::parse(Assoc &env)
         return Expr(t);
     }
     Expr t = stxs.begin()->parse(env);
-    if (t->e_type == E_VAR)
+    if (t->e_type == E_VAR || typeid(*stxs[0].get()) == typeid(List))
     {
         std::vector<Expr> t1;
         auto p = stxs.begin();
@@ -203,9 +203,9 @@ Expr List ::parse(Assoc &env)
             SyntaxBase *varpt = LamdaList->stxs[i].get();
             Identifier *varname = dynamic_cast<Identifier *>(varpt);
             x.push_back(varname->s);
-            if (m.find(varname->s) != m.begin())
+            if (m.find(varname->s) != m.end())
                 throw RuntimeError("non-unique bindings");
-            env = extend(varname->s, Value(nullptr), env);
+            env = extend(varname->s, TerminateV(), env);
             m[varname->s] = 1;
         }
         Expr body = stxs[2]->parse(env);
@@ -280,7 +280,7 @@ Expr List ::parse(Assoc &env)
         ++p;
         Expr body = p->parse(env);
 
-        ExprBase *temp = new Let(bind, body);
+        ExprBase *temp = new Letrec(bind, body);
         env = env2;
         return Expr(temp);
     }
@@ -444,6 +444,10 @@ Expr List ::parse(Assoc &env)
         Expr rand2 = stxs[2].parse(env);
         ExprBase *temp = new IsEq(rand1, rand2);
         return Expr(temp);
+    }
+    else
+    {
+        throw RuntimeError("Bad format");
     }
 }
 

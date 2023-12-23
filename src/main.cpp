@@ -30,6 +30,7 @@ void REPL()
         catch (const RuntimeError &RE)
         {
             std ::cout << RE.message();
+            global_env = empty();
         }
         puts("");
     }

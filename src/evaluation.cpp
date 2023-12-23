@@ -52,22 +52,16 @@ Value Letrec::eval(Assoc &env)
     {
         env = extend(p.first, real_voidV(), env);
     }
-    Assoc env3 = env;
-    std::vector<Value> vct; // 用于存储指向 Closure 的 Value
+    std::vector<Value> vct; // 用于记录所有求得的值
     for (auto p : bind)
     {
-        Value v = p.second->eval(env3);
-        if (typeid(*v.get()) == typeid(Closure))
-        {
-            vct.push_back(v);
-        }
-        env = extend(p.first, v, env);
+        Value v = p.second->eval(env);
+        vct.push_back(v);
     }
     // 修改 Closure 中的作用域
-    for (auto p : vct)
+    for (int i = 0; i < bind.size(); ++i)
     {
-        Closure *t = dynamic_cast<Closure *>(p.get());
-        t->env = env;
+        modify(bind[i].first, vct[i], env);
     }
     Value v = body->eval(env);
     env = env2;

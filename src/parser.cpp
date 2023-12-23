@@ -436,6 +436,14 @@ Expr List ::parse(Assoc &env)
         ExprBase *temp = new IsProcedure(rand1);
         return Expr(temp);
     }
+    else if (t->e_type == E_SYMBOLQ)
+    {
+        if (stxs.size() != 2)
+            throw RuntimeError("Bad parameter number");
+        Expr rand1 = stxs[1].parse(env);
+        ExprBase *temp = new IsSymbol(rand1);
+        return Expr(temp);
+    }
     else if (t->e_type == E_EQQ)
     {
         if (stxs.size() != 3)
